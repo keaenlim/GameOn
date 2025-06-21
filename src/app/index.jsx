@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import { StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, SafeAreaView } from 'react-native'
 import { Link, useRouter, useFocusEffect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useState, useCallback } from 'react'
@@ -11,6 +11,8 @@ import ThemedView from "../components/ThemedView"
 import ThemedText from "../components/ThemedText"
 import ThemedLogo from "../components/ThemedLogo"
 import Spacer from "../components/Spacer"
+
+const topPadding = Platform.OS === 'android' ? StatusBar.currentHeight : 48;
 
 const Home = () => {
   const router = useRouter()
@@ -66,68 +68,57 @@ const Home = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* Header Section */}
-        <ThemedView style={styles.header}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={{ flexGrow: 1 }}>
+          {/* Header Section */}
+          <ThemedView style={styles.header}>
             {/* To add logo here */}
-          <ThemedText style={styles.welcomeText}>Welcome to GameOn</ThemedText>
-          <ThemedText style={styles.subtitle}>Find your next match</ThemedText>
-        </ThemedView>
-
-        {/* Quick Actions */}
-        <ThemedView style={styles.quickActions}>
-          <TouchableOpacity 
-            style={styles.createMatchButton}
-            onPress={() => router.push('/create-match')}
-          >
-            <Ionicons name="add-circle" size={24} color="white" />
-            <ThemedText style={styles.buttonText}>Create Match</ThemedText>
-          </TouchableOpacity>
-          
-          {/* Logout Button */}
-          {/* REMOVED:
-          <TouchableOpacity 
-            style={[styles.createMatchButton, styles.logoutButton]}
-            onPress={handleLogout}
-          >
-            <Ionicons name="log-out-outline" size={24} color="white" />
-            <ThemedText style={styles.buttonText}>Logout</ThemedText>
-          </TouchableOpacity>
-          */}
-
-        </ThemedView>
-
-        {/* Upcoming Matches */}
-        <ThemedView style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Upcoming Matches</ThemedText>
-          <ThemedView style={styles.matchCard}>
-            <ThemedText style={styles.matchTitle}>No upcoming matches</ThemedText>
-            <ThemedText>Create or join a match to get started!</ThemedText>
+            <ThemedText style={styles.welcomeText}>Welcome to GameOn</ThemedText>
+            <ThemedText style={styles.subtitle}>Find your next match</ThemedText>
           </ThemedView>
-        </ThemedView>
 
-        {/* Your Preferences */}
-        <ThemedView style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Your Preferences</ThemedText>
-          <ThemedView style={styles.preferencesCard}>
-            {isLoadingPreferences ? (
-              <ThemedText>Loading preferences...</ThemedText>
-            ) : (
-              <>
-                <ThemedText>Skill Level: {userSkillLevel.charAt(0).toUpperCase() + userSkillLevel.slice(1)}</ThemedText>
-                <ThemedText>Location: {userPreferredLocation}</ThemedText>
-              </>
-            )}
+          {/* Quick Actions */}
+          <ThemedView style={styles.quickActions}>
             <TouchableOpacity 
-              style={styles.editButton}
-              onPress={() => router.push('/preferences')}
+              style={styles.createMatchButton}
+              onPress={() => router.push('/create-match')}
             >
-              <ThemedText style={styles.editButtonText}>Edit Preferences</ThemedText>
+              <Ionicons name="add-circle" size={24} color="white" />
+              <ThemedText style={styles.buttonText}>Create Match</ThemedText>
             </TouchableOpacity>
           </ThemedView>
-        </ThemedView>
-      </ScrollView>
 
+          {/* Upcoming Matches */}
+          <ThemedView style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>Upcoming Matches</ThemedText>
+            <ThemedView style={styles.matchCard}>
+              <ThemedText style={styles.matchTitle}>No upcoming matches</ThemedText>
+              <ThemedText>Create or join a match to get started!</ThemedText>
+            </ThemedView>
+          </ThemedView>
+
+          {/* Your Preferences */}
+          <ThemedView style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>Your Preferences</ThemedText>
+            <ThemedView style={styles.preferencesCard}>
+              {isLoadingPreferences ? (
+                <ThemedText>Loading preferences...</ThemedText>
+              ) : (
+                <>
+                  <ThemedText>Skill Level: {userSkillLevel.charAt(0).toUpperCase() + userSkillLevel.slice(1)}</ThemedText>
+                  <ThemedText>Location: {userPreferredLocation}</ThemedText>
+                </>
+              )}
+              <TouchableOpacity 
+                style={styles.editButton}
+                onPress={() => router.push('/preferences')}
+              >
+                <ThemedText style={styles.editButtonText}>Edit Preferences</ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          </ThemedView>
+        </ScrollView>
+      </SafeAreaView>
       {/* Bottom Navigation Bar */}
       <ThemedView style={styles.bottomTabBar}>
         <TouchableOpacity
@@ -271,7 +262,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     paddingVertical: 10,
-    paddingBottom: 20, // Adjust for iPhone X safe area
+    paddingBottom: 20,
   },
   tabButton: {
     flex: 1,

@@ -52,7 +52,7 @@ const RootLayout = () => {
                 headerTintColor: theme.title
             }}>
                 <Stack.Screen 
-                    name="." 
+                    name="index" 
                     options={{ 
                         headerShown: false,
                         headerLeft: () => null,

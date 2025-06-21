@@ -29,8 +29,7 @@ GameOn/
 │   ├── constants/     # Theme, colors, static config
 │   ├── utils/         # Utility functions, API, Firebase config
 │   ├── assets/        # Images, fonts, etc.
-├── app.config.js      # Expo config (with router.appDir)
-├── app.json           # (legacy, still required by Expo)
+├── app.json           # Expo configuration
 ├── .env               # Environment variables (not committed)
 ├── .gitignore         # Git ignore rules
 ├── package.json
@@ -68,19 +67,13 @@ GameOn/
    - Copy the structure from `.env.example` (if present)
    - Add your Firebase and Google Places API keys (no quotes)
 
-6. **Expo Router configuration:**
-   - The project uses a custom app directory (`src/app/`).
-   - `app.config.js` is used to set:
-     ```js
-     router: {
-       appDir: "src/app"
-     }
-     ```
-   - Do NOT add a `router` property to `app.json`.
-
-7. **Start the development server:**
+6. **Start the development server:**
    ```bash
    npx expo start --clear
+   ```
+   OR
+   ```bash
+   npx expo start
    ```
 
 ## Environment Variables

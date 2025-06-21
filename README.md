@@ -19,20 +19,40 @@ A React Native mobile application for tennis players to find and organize matche
 - iOS Simulator (for Mac) or Android Studio (for Android development)
 - Firebase account
 
+## Project Structure
+
+```
+GameOn/
+├── src/
+│   ├── app/           # Expo Router pages/screens (index.jsx, find-matches.jsx, etc.)
+│   ├── components/    # Reusable UI components
+│   ├── constants/     # Theme, colors, static config
+│   ├── utils/         # Utility functions, API, Firebase config
+│   ├── assets/        # Images, fonts, etc.
+├── app.config.js      # Expo config (with router.appDir)
+├── app.json           # (legacy, still required by Expo)
+├── .env               # Environment variables (not committed)
+├── .gitignore         # Git ignore rules
+├── package.json
+├── package-lock.json
+├── README.md
+└── ...other root files
+```
+
 ## Setup
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/GameOn.git
-cd GameOn
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/GameOn.git
+   cd GameOn
+   ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-3. Create a Firebase project and add your configuration:
+3. **Create a Firebase project and add your configuration:**
    - Go to Firebase Console
    - Create a new project
    - Add an iOS app with bundle ID "com.gameon.app"
@@ -40,18 +60,28 @@ npm install
    - Enable Authentication (Email/Password)
    - Create Firestore database
 
-4. Update Firebase configuration:
-   - Copy your Firebase config to `utils/firebaseConfig.js`
-   - Add your Google Places API key to `utils/config.js`
+4. **Update Firebase configuration:**
+   - Copy your Firebase config to `src/utils/firebaseConfig.js`
+   - Add your Google Places API key to `src/utils/config.js`
 
-5. Start the development server:
-```bash
-npx expo start 
-```
-OR (to clear cache)
-```bash
-npx expo start --clear 
-```
+5. **Create a `.env` file in the project root:**
+   - Copy the structure from `.env.example` (if present)
+   - Add your Firebase and Google Places API keys (no quotes)
+
+6. **Expo Router configuration:**
+   - The project uses a custom app directory (`src/app/`).
+   - `app.config.js` is used to set:
+     ```js
+     router: {
+       appDir: "src/app"
+     }
+     ```
+   - Do NOT add a `router` property to `app.json`.
+
+7. **Start the development server:**
+   ```bash
+   npx expo start --clear
+   ```
 
 ## Environment Variables
 
@@ -67,16 +97,10 @@ FIREBASE_MEASUREMENT_ID=your_measurement_id
 GOOGLE_PLACES_API_KEY=your_google_places_api_key
 ```
 
-## Project Structure
-
-```
-GameOn/
-├── app/                    # Main application screens
-├── components/            # Reusable components
-├── constants/             # Theme and other constants
-├── utils/                 # Utility functions and configurations
-└── assets/               # Images and other static assets
-```
+## Notes on Layout and Safe Area
+- The main content of each screen is wrapped in a `SafeAreaView` (except the bottom navigation bar) to avoid the notch/status bar, while keeping the bottom bar flush to the bottom.
+- The root route is named `index` in the stack and file structure.
+- If you add new screens, follow the same pattern for consistent layout.
 
 ## Contributing
 

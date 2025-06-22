@@ -152,16 +152,6 @@ const Home = () => {
           <Ionicons name="chatbubble-outline" size={24} color={router.pathname === '/messages' ? "#007AFF" : "#007AFF"} />
           {/* TODO: Add notification badge logic here */}
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tabButton}
-          onPress={() => {
-            if (router.pathname !== '/settings') {
-              router.replace('/settings')
-            }
-          }}
-        >
-          <Ionicons name="settings-outline" size={24} color={router.pathname === '/settings' ? "#007AFF" : "#007AFF"} />
-        </TouchableOpacity>
       </ThemedView>
     </ThemedView>
   )

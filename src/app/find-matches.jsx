@@ -17,6 +17,7 @@ const FindMatches = () => {
   const [searchSkillLevel, setSearchSkillLevel] = useState(null) // null for all skills
   const [searchDate, setSearchDate] = useState(new Date())
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [searchTimeSlot, setSearchTimeSlot] = useState(null); // null for 'All'
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || searchDate;
@@ -31,7 +32,8 @@ const FindMatches = () => {
       `Searching for:
       Location: ${searchLocation || 'Any'}
       Skill Level: ${searchSkillLevel || 'Any'}
-      Date: ${searchDate.toDateString()}`
+      Date: ${searchDate.toDateString()}
+      Time: ${searchTimeSlot || 'Any'}`
     );
   };
 
@@ -133,6 +135,30 @@ const FindMatches = () => {
             </Modal>
           </ThemedView>
 
+          {/* Time Slot Filter */}
+          <ThemedView style={styles.section}>
+            <ThemedText style={styles.label}>Time Slot</ThemedText>
+            <ThemedView style={styles.skillLevelContainer}>
+              {[null, 'morning', 'afternoon', 'evening', 'late night'].map((slot) => (
+                <TouchableOpacity
+                  key={slot === null ? 'all' : slot}
+                  style={[
+                    styles.skillLevelButton,
+                    searchTimeSlot === slot && styles.skillLevelButtonActive
+                  ]}
+                  onPress={() => setSearchTimeSlot(slot)}
+                >
+                  <ThemedText style={[
+                    styles.skillLevelText,
+                    searchTimeSlot === slot && styles.skillLevelTextActive
+                  ]}>
+                    {slot === null ? 'All' : slot.charAt(0).toUpperCase() + slot.slice(1)}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </ThemedView>
+          </ThemedView>
+
           {/* Search Button */}
           <TouchableOpacity
             style={styles.searchButton}
@@ -176,16 +202,6 @@ const FindMatches = () => {
           <Ionicons name="chatbubble-outline" size={24} color={router.pathname === '/messages' ? "#007AFF" : "#007AFF"} />
           {/* TODO: Add notification badge logic here (similar to messages.jsx if applicable) */}
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tabButton}
-          onPress={() => {
-            if (router.pathname !== '/settings') {
-              router.replace('/settings');
-            }
-          }}
-        >
-          <Ionicons name="settings-outline" size={24} color={router.pathname === '/settings' ? "#007AFF" : "#007AFF"} />
-        </TouchableOpacity>
       </ThemedView>
     </ThemedView>
   )
@@ -226,7 +242,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flex: 0,
   },
-  searchInput: {
+  searchInput: { 
     height: 50,
     backgroundColor: '#f5f5f5',
     borderRadius: 10,

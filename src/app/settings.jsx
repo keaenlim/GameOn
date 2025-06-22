@@ -4,12 +4,14 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '../utils/firebaseConfig';
+import { useTheme } from '../contexts/ThemeContext';
 
 import ThemedView from "../components/ThemedView";
 import ThemedText from "../components/ThemedText";
 
 const Settings = () => {
   const router = useRouter();
+  const { themePreference, setThemePreference } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -28,6 +30,31 @@ const Settings = () => {
         </ThemedView>
 
         <ThemedView style={styles.content}>
+          {/* Theme Settings */}
+          <ThemedView style={styles.settingSection}>
+            <ThemedText style={styles.settingSectionTitle}>Theme</ThemedText>
+            <ThemedView style={styles.themeSelector}>
+              <TouchableOpacity
+                style={[styles.themeButton, themePreference === 'light' && styles.themeButtonActive]}
+                onPress={() => setThemePreference('light')}
+              >
+                <ThemedText style={[styles.themeButtonText, themePreference === 'light' && styles.themeButtonTextActive]}>Light</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.themeButton, themePreference === 'dark' && styles.themeButtonActive]}
+                onPress={() => setThemePreference('dark')}
+              >
+                <ThemedText style={[styles.themeButtonText, themePreference === 'dark' && styles.themeButtonTextActive]}>Dark</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.themeButton, themePreference === 'system' && styles.themeButtonActive]}
+                onPress={() => setThemePreference('system')}
+              >
+                <ThemedText style={[styles.themeButtonText, themePreference === 'system' && styles.themeButtonTextActive]}>System</ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          </ThemedView>
+          
           {/* Logout Button */}
           <TouchableOpacity 
             style={styles.logoutButton}
@@ -48,50 +75,6 @@ const Settings = () => {
           </ThemedView>
         </ThemedView>
       </ScrollView>
-
-      {/* Bottom Navigation Bar (similar to other main tabs) */}
-      <ThemedView style={styles.bottomTabBar}>
-        <TouchableOpacity
-          style={styles.tabButton}
-          onPress={() => {
-            if (router.pathname !== '/') {
-              router.replace('/');
-            }
-          }}
-        >
-          <Ionicons name="home-outline" size={24} color={router.pathname === '/' ? "#007AFF" : "#007AFF"} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tabButton}
-          onPress={() => {
-            if (router.pathname !== '/find-matches') {
-              router.replace('/find-matches');
-            }
-          }}
-        >
-          <Ionicons name="search-outline" size={24} color={router.pathname === '/find-matches' ? "#007AFF" : "#007AFF"} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tabButton}
-          onPress={() => {
-            if (router.pathname !== '/messages') {
-              router.replace('/messages');
-            }
-          }}
-        >
-          <Ionicons name="chatbubble-outline" size={24} color={router.pathname === '/messages' ? "#007AFF" : "#007AFF"} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tabButton}
-          onPress={() => {
-            if (router.pathname !== '/settings') {
-              router.replace('/settings');
-            }
-          }}
-        >
-          <Ionicons name="settings-outline" size={24} color={router.pathname === '/settings' ? "#007AFF" : "#007AFF"} />
-        </TouchableOpacity>
-      </ThemedView>
     </ThemedView>
   );
 };
@@ -159,5 +142,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 5,
     position: 'relative',
+  },
+  settingSection: {
+    marginBottom: 20,
+  },
+  settingSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  themeSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    padding: 5,
+  },
+  themeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  themeButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  themeButtonText: {
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  themeButtonTextActive: {
+    color: 'white',
   },
 }); 

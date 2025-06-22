@@ -1,14 +1,16 @@
 import { Stack, useRouter } from "expo-router"
-import { StyleSheet, Text, useColorScheme, View } from "react-native"
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native"
 import { Colors } from "../constants/Colors"
 import { StatusBar } from "expo-status-bar"
 import { useEffect, useState } from "react"
 import { onAuthStateChanged } from "firebase/auth"
 import { auth } from "../utils/firebaseConfig"
 import 'react-native-get-random-values';
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+import { Ionicons } from '@expo/vector-icons';
 
-const RootLayout = () => {
-    const colorScheme = useColorScheme()
+const AppLayout = () => {
+    const { theme } = useTheme();
     const router = useRouter()
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -38,7 +40,7 @@ const RootLayout = () => {
         }
     }, [user, loading, router.pathname]);
 
-    const theme = Colors[colorScheme] ?? Colors.light
+    const themeColors = Colors[theme] ?? Colors.light
 
     if (loading) {
         return null;
@@ -48,14 +50,23 @@ const RootLayout = () => {
         <>
             <StatusBar value="auto" />
             <Stack screenOptions={{
-                headerStyle: { backgroundColor: theme.navBackground},
-                headerTintColor: theme.title
+                headerStyle: { backgroundColor: themeColors.navBackground },
+                headerTintColor: themeColors.title,
+                headerRight: () => (
+                    <TouchableOpacity
+                        onPress={() => router.push('/settings')}
+                        style={{ marginRight: 16 }}
+                    >
+                        <Ionicons name="person-circle-outline" size={28} color={themeColors.iconColor} />
+                    </TouchableOpacity>
+                ),
             }}>
                 <Stack.Screen 
                     name="index" 
                     options={{ 
-                        headerShown: false,
+                        title: 'Home',
                         headerLeft: () => null,
+                        headerBackVisible: false,
                         gestureEnabled: false
                     }}
                 />
@@ -85,10 +96,18 @@ const RootLayout = () => {
                 }}/>
                 <Stack.Screen name="settings" options={{
                     title: 'Settings',
-                    headerLeft: () => null
+                    headerRight: () => null
                 }}/>
             </Stack>
         </>
+    )
+}
+
+const RootLayout = () => {
+    return (
+        <ThemeProvider>
+            <AppLayout />
+        </ThemeProvider>
     )
 }
 

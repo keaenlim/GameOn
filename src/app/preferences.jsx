@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { StyleSheet, ScrollView, TouchableOpacity, Alert, View } from 'react-native'
+import { StyleSheet, FlatList, TouchableOpacity, Alert, View, Modal } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
@@ -19,6 +19,7 @@ const Preferences = () => {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [currentLocation, setCurrentLocation] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showLocationModal, setShowLocationModal] = useState(false)
 
   useEffect(() => {
     loadUserPreferences()
@@ -132,101 +133,112 @@ const Preferences = () => {
     )
   }
 
+  // All form sections as FlatList items
+  const formSections = [
+    { key: 'skill', render: () => (
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Skill Level</ThemedText>
+        <ThemedView style={styles.skillLevelContainer}>
+          {['beginner', 'intermediate', 'advanced'].map((level) => (
+            <TouchableOpacity
+              key={level}
+              style={[
+                styles.skillLevelButton,
+                skillLevel === level && styles.skillLevelButtonActive
+              ]}
+              onPress={() => setSkillLevel(level)}
+            >
+              <ThemedText style={[
+                styles.skillLevelText,
+                skillLevel === level && styles.skillLevelTextActive
+              ]}>
+                {level.charAt(0).toUpperCase() + level.slice(1)}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ThemedView>
+      </ThemedView>
+    )},
+    { key: 'save', render: () => (
+      <TouchableOpacity 
+        style={styles.saveButton}
+        onPress={handleSavePreferences}
+      >
+        <ThemedText style={styles.saveButtonText}>Save Preferences</ThemedText>
+      </TouchableOpacity>
+    )},
+  ];
+
   return (
     <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>Preferences</ThemedText>
-        </ThemedView>
-
-        <ThemedView style={styles.form}>
-          {/* Skill Level */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Skill Level</ThemedText>
-            <ThemedView style={styles.skillLevelContainer}>
-              {['beginner', 'intermediate', 'advanced'].map((level) => (
-                <TouchableOpacity
-                  key={level}
-                  style={[
-                    styles.skillLevelButton,
-                    skillLevel === level && styles.skillLevelButtonActive
-                  ]}
-                  onPress={() => setSkillLevel(level)}
-                >
-                  <ThemedText style={[
-                    styles.skillLevelText,
-                    skillLevel === level && styles.skillLevelTextActive
-                  ]}>
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </ThemedText>
-                </TouchableOpacity>
-              ))}
-            </ThemedView>
-          </ThemedView>
-
-          {/* Preferred Location */}
+      <ThemedView style={styles.header}>
+        <ThemedText style={styles.title}>Preferences</ThemedText>
+      </ThemedView>
+      <FlatList
+        data={formSections}
+        keyExtractor={item => item.key}
+        renderItem={({ item }) => item.render()}
+        ListHeaderComponent={
           <ThemedView style={styles.section}>
             <ThemedText style={styles.label}>Preferred Location</ThemedText>
-            <View style={styles.locationContainer}>
-              <TouchableOpacity 
-                style={styles.currentLocationButton}
-                onPress={getCurrentLocation}
-                disabled={isLoadingLocation}
-              >
-                <Ionicons 
-                  name={isLoadingLocation ? "sync" : "location"} 
-                  size={24} 
-                  color="#007AFF" 
+            <TouchableOpacity
+              style={styles.locationInput}
+              onPress={() => setShowLocationModal(true)}
+            >
+              <ThemedText style={{ color: preferredLocation ? '#201e2b' : '#999' }}>
+                {preferredLocation || 'Select a location...'}
+              </ThemedText>
+            </TouchableOpacity>
+            <Modal
+              visible={showLocationModal}
+              animationType="slide"
+              onRequestClose={() => setShowLocationModal(false)}
+            >
+              <ThemedView style={{ flex: 1, paddingTop: 40, backgroundColor: '#fff' }}>
+                <GooglePlacesAutocomplete
+                  placeholder="Search for your preferred location..."
+                  onPress={(data, details = null) => {
+                    const address = details?.formatted_address || data.description;
+                    setPreferredLocation(address);
+                    setLocationCoords(details ? {
+                      latitude: details.geometry.location.lat,
+                      longitude: details.geometry.location.lng
+                    } : null);
+                    setShowLocationModal(false);
+                  }}
+                  query={{
+                    key: GOOGLE_PLACES_API_KEY,
+                    language: 'en',
+                    components: 'country:SG',
+                    keyword: 'tennis court'
+                  }}
+                  fetchDetails={true}
+                  enablePoweredByContainer={false}
+                  minLength={2}
+                  nearbyPlacesAPI="GooglePlacesSearch"
+                  debounce={200}
+                  predefinedPlaces={[]}
+                  styles={{
+                    container: { flex: 0, margin: 16 },
+                    textInput: { height: 50, backgroundColor: '#f5f5f5', borderRadius: 10, paddingHorizontal: 15, fontSize: 14 },
+                    listView: { backgroundColor: '#fff', borderRadius: 10, marginTop: 5, elevation: 5, zIndex: 9999 },
+                    row: { padding: 15, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+                    description: { fontSize: 14 },
+                  }}
+                  textInputProps={{
+                    autoFocus: true,
+                  }}
                 />
-                <ThemedText style={styles.currentLocationText}>
-                  {isLoadingLocation ? 'Getting location...' : 'Use Current Location'}
-                </ThemedText>
-              </TouchableOpacity>
-              
-              <ThemedText style={styles.orText}>or</ThemedText>
-              
-              <GooglePlacesAutocomplete
-                placeholder='Search for your preferred location...'
-                onPress={(data, details = null) => {
-                  setPreferredLocation(data.description)
-                  setLocationCoords({
-                    latitude: details.geometry.location.lat,
-                    longitude: details.geometry.location.lng
-                  })
-                }}
-                query={{
-                  key: GOOGLE_PLACES_API_KEY,
-                  language: 'en',
-                  types: 'establishment',
-                  keyword: 'tennis court'
-                }}
-                styles={{
-                  container: styles.searchContainer,
-                  textInput: styles.searchInput,
-                  listView: styles.searchResults,
-                  row: styles.searchRow,
-                  description: styles.searchDescription
-                }}
-                fetchDetails={true}
-                enablePoweredByContainer={false}
-                minLength={2}
-                nearbyPlacesAPI="GooglePlacesSearch"
-                debounce={200}
-                predefinedPlaces={[]}
-                textInputProps={{}}
-              />
-            </View>
+                <TouchableOpacity onPress={() => setShowLocationModal(false)} style={{ alignItems: 'center', marginTop: 20 }}>
+                  <ThemedText style={{ color: '#007AFF', fontWeight: 'bold', fontSize: 16 }}>Cancel</ThemedText>
+                </TouchableOpacity>
+              </ThemedView>
+            </Modal>
           </ThemedView>
-
-          {/* Save Button */}
-          <TouchableOpacity 
-            style={styles.saveButton}
-            onPress={handleSavePreferences}
-          >
-            <ThemedText style={styles.saveButtonText}>Save Preferences</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-      </ScrollView>
+        }
+        contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
+      />
     </ThemedView>
   )
 }
@@ -237,9 +249,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
   header: {
     padding: 20,
     borderBottomWidth: 1,
@@ -248,9 +257,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-  },
-  form: {
-    padding: 20,
   },
   section: {
     marginBottom: 20,
@@ -346,5 +352,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  locationInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 15,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
   },
 })

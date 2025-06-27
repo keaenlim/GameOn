@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { StyleSheet, ScrollView, TouchableOpacity, Platform, Alert, TextInput, View, Modal } from 'react-native'
+import { StyleSheet, FlatList, TouchableOpacity, Platform, Alert, TextInput, View, Modal } from 'react-native'
 import { useRouter } from 'expo-router'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { Ionicons } from '@expo/vector-icons'
@@ -36,6 +36,7 @@ const CreateMatch = () => {
   const [notes, setNotes] = useState('')
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [currentLocation, setCurrentLocation] = useState(null)
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -186,192 +187,200 @@ const CreateMatch = () => {
     })
   }
 
-  return (
-    <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>Create New Match</ThemedText>
-        </ThemedView>
-
-        <ThemedView style={styles.form}>
-          {/* Date and Time Selection */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Date & Time</ThemedText>
-            <ThemedView style={styles.dateTimeContainer}>
-              <TouchableOpacity 
-                style={styles.dateTimeButton}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Ionicons name="calendar" size={24} color="#007AFF" />
-                <ThemedText>{formatDate(matchDate)}</ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
-            <ThemedView style={styles.buttonsSpacing} />
-            <ThemedView style={styles.dateTimeContainer}>
-              <TouchableOpacity 
-                style={styles.dateTimeButton}
-                onPress={() => setShowStartTimePicker(true)}
-              >
-                <Ionicons name="time" size={24} color="#007AFF" />
-                <ThemedText>{formatTime(startTime)}</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.dateTimeButton}
-                onPress={() => setShowEndTimePicker(true)}
-              >
-                <Ionicons name="hourglass" size={24} color="#007AFF" />
-                <ThemedText>{formatTime(endTime)}</ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
-          </ThemedView>
-
-          {/* Location */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Location</ThemedText>
-            <View style={styles.locationContainer}>
-              <TouchableOpacity 
-                style={styles.currentLocationButton}
-                onPress={getCurrentLocation}
-                disabled={isLoadingLocation}
-              >
-                <Ionicons 
-                  name={isLoadingLocation ? "sync" : "location"} 
-                  size={24} 
-                  color="#007AFF" 
-                />
-                <ThemedText style={styles.currentLocationText}>
-                  {isLoadingLocation ? 'Getting location...' : 'Use Current Location'}
-                </ThemedText>
-              </TouchableOpacity>
-              
-              <ThemedText style={styles.orText}>or</ThemedText>
-              
-              <GooglePlacesAutocomplete
-                placeholder='Search for tennis courts...'
-                onPress={(data, details = null) => {
-                  setLocation(data.description)
-                  setLocationCoords({
-                    latitude: details.geometry.location.lat,
-                    longitude: details.geometry.location.lng
-                  })
-                }}
-                query={{
-                  key: GOOGLE_PLACES_API_KEY,
-                  language: 'en',
-                  types: 'establishment',
-                  keyword: 'tennis court'
-                }}
-                styles={{
-                  container: styles.searchContainer,
-                  textInput: styles.searchInput,
-                  listView: styles.searchResults,
-                  row: styles.searchRow,
-                  description: styles.searchDescription
-                }}
-                fetchDetails={true}
-                enablePoweredByContainer={false}
-                minLength={2}
-                nearbyPlacesAPI="GooglePlacesSearch"
-                debounce={200}
-                predefinedPlaces={[]}
-                textInputProps={{}}
-              />
-            </View>
-          </ThemedView>
-
-          {/* Skill Level */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Skill Level</ThemedText>
-            <ThemedView style={styles.skillLevelContainer}>
-              {['beginner', 'intermediate', 'advanced'].map((level) => (
-                <TouchableOpacity
-                  key={level}
-                  style={[
-                    styles.skillLevelButton,
-                    skillLevel === level && styles.skillLevelButtonActive
-                  ]}
-                  onPress={() => setSkillLevel(level)}
-                >
-                  <ThemedText style={[
-                    styles.skillLevelText,
-                    skillLevel === level && styles.skillLevelTextActive,
-                    { fontSize: 12 }
-                  ]}>
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </ThemedText>
-                </TouchableOpacity>
-              ))}
-            </ThemedView>
-          </ThemedView>
-
-          {/* Players Needed */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Players Needed</ThemedText>
-            <ThemedView style={styles.playersContainer}>
-              <TouchableOpacity
-                style={styles.playersButton}
-                onPress={() => setPlayersNeeded(Math.max(1, playersNeeded - 1))}
-              >
-                <Ionicons name="remove" size={24} color="#007AFF" />
-              </TouchableOpacity>
-              <ThemedText style={styles.playersCount}>{playersNeeded}</ThemedText>
-              <TouchableOpacity
-                style={styles.playersButton}
-                onPress={() => setPlayersNeeded(Math.min(4, playersNeeded + 1))}
-              >
-                <Ionicons name="add" size={24} color="#007AFF" />
-              </TouchableOpacity>
-            </ThemedView>
-          </ThemedView>
-
-          {/* Court Type */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Court Type</ThemedText>
-            <ThemedView style={styles.courtTypeContainer}>
-              {['indoor', 'outdoor'].map((type) => (
-                <TouchableOpacity
-                  key={type}
-                  style={[
-                    styles.courtTypeButton,
-                    courtType === type && styles.courtTypeButtonActive
-                  ]}
-                  onPress={() => setCourtType(type)}
-                >
-                  <ThemedText style={[
-                    styles.courtTypeText,
-                    courtType === type && styles.courtTypeTextActive
-                  ]}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </ThemedText>
-                </TouchableOpacity>
-              ))}
-            </ThemedView>
-          </ThemedView>
-
-          {/* Notes */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Additional Notes</ThemedText>
-            <TextInput
-              style={styles.notesInput}
-              placeholder="Add any additional details about the match..."
-              placeholderTextColor="#999"
-              multiline
-              numberOfLines={4}
-              value={notes}
-              onChangeText={setNotes}
-            />
-          </ThemedView>
-
-          {/* Create Button */}
+  const formSections = [
+    { key: 'datetime', render: () => (
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Date & Time</ThemedText>
+        <ThemedView style={styles.dateTimeContainer}>
           <TouchableOpacity 
-            style={styles.createButton}
-            onPress={handleCreateMatch}
+            style={styles.dateTimeButton}
+            onPress={() => setShowDatePicker(true)}
           >
-            <ThemedText style={styles.createButtonText}>Create Match</ThemedText>
+            <Ionicons name="calendar" size={24} color="#007AFF" />
+            <ThemedText>{formatDate(matchDate)}</ThemedText>
           </TouchableOpacity>
         </ThemedView>
-      </ScrollView>
+        <ThemedView style={styles.buttonsSpacing} />
+        <ThemedView style={styles.dateTimeContainer}>
+          <TouchableOpacity 
+            style={styles.dateTimeButton}
+            onPress={() => setShowStartTimePicker(true)}
+          >
+            <Ionicons name="time" size={24} color="#007AFF" />
+            <ThemedText>{formatTime(startTime)}</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.dateTimeButton}
+            onPress={() => setShowEndTimePicker(true)}
+          >
+            <Ionicons name="hourglass" size={24} color="#007AFF" />
+            <ThemedText>{formatTime(endTime)}</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      </ThemedView>
+    )},
+    { key: 'skill', render: () => (
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Skill Level</ThemedText>
+        <ThemedView style={styles.skillLevelContainer}>
+          {['beginner', 'intermediate', 'advanced'].map((level) => (
+            <TouchableOpacity
+              key={level}
+              style={[
+                styles.skillLevelButton,
+                skillLevel === level && styles.skillLevelButtonActive
+              ]}
+              onPress={() => setSkillLevel(level)}
+            >
+              <ThemedText style={[
+                styles.skillLevelText,
+                skillLevel === level && styles.skillLevelTextActive,
+                { fontSize: 12 }
+              ]}>
+                {level.charAt(0).toUpperCase() + level.slice(1)}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ThemedView>
+      </ThemedView>
+    )},
+    { key: 'players', render: () => (
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Players Needed</ThemedText>
+        <ThemedView style={styles.playersContainer}>
+          <TouchableOpacity
+            style={styles.playersButton}
+            onPress={() => setPlayersNeeded(Math.max(1, playersNeeded - 1))}
+          >
+            <Ionicons name="remove" size={24} color="#007AFF" />
+          </TouchableOpacity>
+          <ThemedText style={styles.playersCount}>{playersNeeded}</ThemedText>
+          <TouchableOpacity
+            style={styles.playersButton}
+            onPress={() => setPlayersNeeded(Math.min(4, playersNeeded + 1))}
+          >
+            <Ionicons name="add" size={24} color="#007AFF" />
+          </TouchableOpacity>
+        </ThemedView>
+      </ThemedView>
+    )},
+    { key: 'court', render: () => (
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Court Type</ThemedText>
+        <ThemedView style={styles.courtTypeContainer}>
+          {['indoor', 'outdoor'].map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[
+                styles.courtTypeButton,
+                courtType === type && styles.courtTypeButtonActive
+              ]}
+              onPress={() => setCourtType(type)}
+            >
+              <ThemedText style={[
+                styles.courtTypeText,
+                courtType === type && styles.courtTypeTextActive
+              ]}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ThemedView>
+      </ThemedView>
+    )},
+    { key: 'notes', render: () => (
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Additional Notes</ThemedText>
+        <TextInput
+          style={styles.notesInput}
+          placeholder="Add any additional details about the match..."
+          placeholderTextColor="#999"
+          multiline
+          numberOfLines={4}
+          value={notes}
+          onChangeText={setNotes}
+        />
+      </ThemedView>
+    )},
+    { key: 'create', render: () => (
+      <TouchableOpacity 
+        style={styles.createButton}
+        onPress={handleCreateMatch}
+      >
+        <ThemedText style={styles.createButtonText}>Create Match</ThemedText>
+      </TouchableOpacity>
+    )},
+  ];
 
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.header}>
+        <ThemedText style={styles.title}>Create New Match</ThemedText>
+      </ThemedView>
+      <FlatList
+        data={formSections}
+        keyExtractor={item => item.key}
+        renderItem={({ item }) => item.render()}
+        ListHeaderComponent={
+          <ThemedView style={styles.section}>
+            <ThemedText style={styles.label}>Location</ThemedText>
+            <TouchableOpacity
+              style={styles.locationInput}
+              onPress={() => setShowLocationModal(true)}
+            >
+              <ThemedText style={{ color: location ? '#201e2b' : '#999' }}>
+                {location || 'Select a location...'}
+              </ThemedText>
+            </TouchableOpacity>
+            <Modal
+              visible={showLocationModal}
+              animationType="slide"
+              onRequestClose={() => setShowLocationModal(false)}
+            >
+              <ThemedView style={{ flex: 1, paddingTop: 40, backgroundColor: '#fff' }}>
+                <GooglePlacesAutocomplete
+                  placeholder="Search for tennis courts..."
+                  onPress={(data, details = null) => {
+                    setLocation(data.description);
+                    setLocationCoords(details ? {
+                      latitude: details.geometry.location.lat,
+                      longitude: details.geometry.location.lng
+                    } : null);
+                    setShowLocationModal(false);
+                  }}
+                  query={{
+                    key: GOOGLE_PLACES_API_KEY,
+                    language: 'en',
+                    components: 'country:SG',
+                    keyword: 'tennis court'
+                  }}
+                  fetchDetails={true}
+                  enablePoweredByContainer={false}
+                  minLength={2}
+                  nearbyPlacesAPI="GooglePlacesSearch"
+                  debounce={200}
+                  predefinedPlaces={[]}
+                  styles={{
+                    container: { flex: 0, margin: 16 },
+                    textInput: { height: 50, backgroundColor: '#f5f5f5', borderRadius: 10, paddingHorizontal: 15, fontSize: 14 },
+                    listView: { backgroundColor: '#fff', borderRadius: 10, marginTop: 5, elevation: 5, zIndex: 9999 },
+                    row: { padding: 15, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+                    description: { fontSize: 14 },
+                  }}
+                  textInputProps={{
+                    autoFocus: true,
+                  }}
+                />
+                <TouchableOpacity onPress={() => setShowLocationModal(false)} style={{ alignItems: 'center', marginTop: 20 }}>
+                  <ThemedText style={{ color: '#007AFF', fontWeight: 'bold', fontSize: 16 }}>Cancel</ThemedText>
+                </TouchableOpacity>
+              </ThemedView>
+            </Modal>
+          </ThemedView>
+        }
+        contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
+      />
       {/* Date Picker Modal */}
       <Modal
         transparent={true}
@@ -459,9 +468,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
   header: {
     padding: 20,
     borderBottomWidth: 1,
@@ -470,9 +476,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-  },
-  form: {
-    padding: 20,
   },
   section: {
     marginBottom: 20,
@@ -496,59 +499,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
   },
-  locationContainer: {
-    gap: 10,
-    position: 'relative',
-  },
-  currentLocationButton: {
+  locationInput: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     padding: 15,
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
-  },
-  currentLocationText: {
-    fontSize: 14,
-  },
-  orText: {
-    textAlign: 'center',
-    marginVertical: 5,
-    opacity: 0.5,
-  },
-  searchContainer: {
-    flex: 0,
-  },
-  searchInput: {
-    height: 50,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    fontSize: 14,
-  },
-  searchResults: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginTop: 5,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    maxHeight: 200,
-    position: 'absolute',
-    top: 50,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-  },
-  searchRow: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  searchDescription: {
-    fontSize: 14,
   },
   skillLevelContainer: {
     flexDirection: 'row',

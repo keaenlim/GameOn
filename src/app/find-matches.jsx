@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { StyleSheet, ScrollView, TouchableOpacity, Alert, View, Modal } from 'react-native'
+import { StyleSheet, FlatList, TouchableOpacity, Alert, View, Modal } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
@@ -14,6 +14,7 @@ const FindMatches = () => {
   const router = useRouter()
   const [searchLocation, setSearchLocation] = useState('')
   const [searchLocationCoords, setSearchLocationCoords] = useState(null)
+  const [showLocationModal, setShowLocationModal] = useState(false)
   const [searchSkillLevel, setSearchSkillLevel] = useState(null) // null for all skills
   const [searchDate, setSearchDate] = useState(new Date())
   const [showDatePicker, setShowDatePicker] = useState(false)
@@ -26,149 +27,170 @@ const FindMatches = () => {
   };
 
   const handleSearchMatches = () => {
-    // TODO: Implement actual search logic using searchLocation, searchSkillLevel, searchDate
     Alert.alert(
       'Search Matches',
-      `Searching for:
-      Location: ${searchLocation || 'Any'}
-      Skill Level: ${searchSkillLevel || 'Any'}
-      Date: ${searchDate.toDateString()}
-      Time: ${searchTimeSlot || 'Any'}`
+      `Searching for:\nLocation: ${searchLocation || 'Any'}\nSkill Level: ${searchSkillLevel || 'Any'}\nDate: ${searchDate.toDateString()}\nTime: ${searchTimeSlot || 'Any'}`
     );
   };
 
+  // All filter sections as a single array for FlatList rendering
+  const filterSections = [
+    { key: 'skill', render: () => (
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Skill Level</ThemedText>
+        <ThemedView style={styles.skillLevelContainer}>
+          {[null, 'beginner', 'intermediate', 'advanced'].map((level) => (
+            <TouchableOpacity
+              key={level === null ? 'all' : level}
+              style={[
+                styles.skillLevelButton,
+                searchSkillLevel === level && styles.skillLevelButtonActive
+              ]}
+              onPress={() => setSearchSkillLevel(level)}
+            >
+              <ThemedText style={[
+                styles.skillLevelText,
+                searchSkillLevel === level && styles.skillLevelTextActive
+              ]}>
+                {level === null ? 'All' : level.charAt(0).toUpperCase() + level.slice(1)}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ThemedView>
+      </ThemedView>
+    )},
+    { key: 'date', render: () => (
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Date</ThemedText>
+        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datePickerButton}>
+          <ThemedText>{searchDate.toDateString()}</ThemedText>
+        </TouchableOpacity>
+        <Modal
+          transparent={true}
+          animationType="fade"
+          visible={showDatePicker}
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <DateTimePicker
+                value={searchDate}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                minimumDate={new Date()}
+              />
+              <TouchableOpacity onPress={() => setShowDatePicker(false)} style={styles.closeButton}>
+                <ThemedText style={styles.closeButtonText}>Done</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </ThemedView>
+    )},
+    { key: 'time', render: () => (
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Time Slot</ThemedText>
+        <ThemedView style={styles.skillLevelContainer}>
+          {[null, 'morning', 'afternoon', 'evening', 'late night'].map((slot) => (
+            <TouchableOpacity
+              key={slot === null ? 'all' : slot}
+              style={[
+                styles.skillLevelButton,
+                searchTimeSlot === slot && styles.skillLevelButtonActive
+              ]}
+              onPress={() => setSearchTimeSlot(slot)}
+            >
+              <ThemedText style={[
+                styles.skillLevelText,
+                searchTimeSlot === slot && styles.skillLevelTextActive
+              ]}>
+                {slot === null ? 'All' : slot.charAt(0).toUpperCase() + slot.slice(1)}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ThemedView>
+      </ThemedView>
+    )},
+    { key: 'search', render: () => (
+      <TouchableOpacity
+        style={styles.searchButton}
+        onPress={handleSearchMatches}
+      >
+        <ThemedText style={styles.searchButtonText}>Search Matches</ThemedText>
+      </TouchableOpacity>
+    )},
+  ];
+
   return (
     <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>Find Matches</ThemedText>
-        </ThemedView>
-
-        <ThemedView style={styles.form}>
-          {/* Location Filter */}
+      <ThemedView style={styles.header}>
+        <ThemedText style={styles.title}>Find Matches</ThemedText>
+      </ThemedView>
+      <FlatList
+        data={filterSections}
+        keyExtractor={item => item.key}
+        renderItem={({ item }) => item.render()}
+        ListHeaderComponent={
           <ThemedView style={styles.section}>
             <ThemedText style={styles.label}>Location</ThemedText>
-            <View style={styles.locationContainer}>
-              <GooglePlacesAutocomplete
-                placeholder='Search for a location...'
-                onPress={(data, details = null) => {
-                  setSearchLocation(data.description)
-                  setSearchLocationCoords({
-                    latitude: details.geometry.location.lat,
-                    longitude: details.geometry.location.lng
-                  })
-                }}
-                query={{
-                  key: GOOGLE_PLACES_API_KEY,
-                  language: 'en',
-                  types: 'establishment',
-                  keyword: 'tennis court'
-                }}
-                styles={{
-                  container: styles.searchContainer,
-                  textInput: styles.searchInput,
-                  listView: styles.searchResults,
-                  row: styles.searchRow,
-                  description: styles.searchDescription
-                }}
-                fetchDetails={true}
-                enablePoweredByContainer={false}
-                minLength={2}
-                nearbyPlacesAPI="GooglePlacesSearch"
-                debounce={200}
-                predefinedPlaces={[]}
-                textInputProps={{}}
-              />
-            </View>
-          </ThemedView>
-
-          {/* Skill Level Filter */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Skill Level</ThemedText>
-            <ThemedView style={styles.skillLevelContainer}>
-              {[null, 'beginner', 'intermediate', 'advanced'].map((level) => (
-                <TouchableOpacity
-                  key={level === null ? 'all' : level}
-                  style={[
-                    styles.skillLevelButton,
-                    searchSkillLevel === level && styles.skillLevelButtonActive
-                  ]}
-                  onPress={() => setSearchSkillLevel(level)}
-                >
-                  <ThemedText style={[
-                    styles.skillLevelText,
-                    searchSkillLevel === level && styles.skillLevelTextActive
-                  ]}>
-                    {level === null ? 'All' : level.charAt(0).toUpperCase() + level.slice(1)}
-                  </ThemedText>
-                </TouchableOpacity>
-              ))}
-            </ThemedView>
-          </ThemedView>
-
-          {/* Date Filter */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Date</ThemedText>
-            <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datePickerButton}>
-              <ThemedText>{searchDate.toDateString()}</ThemedText>
+            <TouchableOpacity
+              style={styles.locationInput}
+              onPress={() => setShowLocationModal(true)}
+            >
+              <ThemedText style={{ color: searchLocation ? '#201e2b' : '#999' }}>
+                {searchLocation || 'Select a location...'}
+              </ThemedText>
             </TouchableOpacity>
             <Modal
-              transparent={true}
-              animationType="fade"
-              visible={showDatePicker}
-              onRequestClose={() => setShowDatePicker(false)}
+              visible={showLocationModal}
+              animationType="slide"
+              onRequestClose={() => setShowLocationModal(false)}
             >
-              <View style={styles.centeredView}>
-                <View style={styles.modalView}>
-                  <DateTimePicker
-                    value={searchDate}
-                    mode="date"
-                    display="spinner"
-                    onChange={handleDateChange}
-                    minimumDate={new Date()}
-                  />
-                  <TouchableOpacity onPress={() => setShowDatePicker(false)} style={styles.closeButton}>
-                    <ThemedText style={styles.closeButtonText}>Done</ThemedText>
-                  </TouchableOpacity>
-                </View>
-              </View>
+              <ThemedView style={{ flex: 1, paddingTop: 40, backgroundColor: '#fff' }}>
+                <GooglePlacesAutocomplete
+                  placeholder="Search for a location..."
+                  onPress={(data, details = null) => {
+                    setSearchLocation(data.description);
+                    setSearchLocationCoords(details ? {
+                      latitude: details.geometry.location.lat,
+                      longitude: details.geometry.location.lng
+                    } : null);
+                    setShowLocationModal(false);
+                  }}
+                  query={{
+                    key: GOOGLE_PLACES_API_KEY,
+                    language: 'en',
+                    components: 'country:SG',
+                    keyword: 'tennis court'
+                  }}
+                  fetchDetails={true}
+                  enablePoweredByContainer={false}
+                  minLength={2}
+                  nearbyPlacesAPI="GooglePlacesSearch"
+                  debounce={200}
+                  predefinedPlaces={[]}
+                  styles={{
+                    container: { flex: 0, margin: 16 },
+                    textInput: { height: 50, backgroundColor: '#f5f5f5', borderRadius: 10, paddingHorizontal: 15, fontSize: 14 },
+                    listView: { backgroundColor: '#fff', borderRadius: 10, marginTop: 5, elevation: 5, zIndex: 9999 },
+                    row: { padding: 15, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+                    description: { fontSize: 14 },
+                  }}
+                  textInputProps={{
+                    autoFocus: true,
+                  }}
+                />
+                <TouchableOpacity onPress={() => setShowLocationModal(false)} style={{ alignItems: 'center', marginTop: 20 }}>
+                  <ThemedText style={{ color: '#007AFF', fontWeight: 'bold', fontSize: 16 }}>Cancel</ThemedText>
+                </TouchableOpacity>
+              </ThemedView>
             </Modal>
           </ThemedView>
-
-          {/* Time Slot Filter */}
-          <ThemedView style={styles.section}>
-            <ThemedText style={styles.label}>Time Slot</ThemedText>
-            <ThemedView style={styles.skillLevelContainer}>
-              {[null, 'morning', 'afternoon', 'evening', 'late night'].map((slot) => (
-                <TouchableOpacity
-                  key={slot === null ? 'all' : slot}
-                  style={[
-                    styles.skillLevelButton,
-                    searchTimeSlot === slot && styles.skillLevelButtonActive
-                  ]}
-                  onPress={() => setSearchTimeSlot(slot)}
-                >
-                  <ThemedText style={[
-                    styles.skillLevelText,
-                    searchTimeSlot === slot && styles.skillLevelTextActive
-                  ]}>
-                    {slot === null ? 'All' : slot.charAt(0).toUpperCase() + slot.slice(1)}
-                  </ThemedText>
-                </TouchableOpacity>
-              ))}
-            </ThemedView>
-          </ThemedView>
-
-          {/* Search Button */}
-          <TouchableOpacity
-            style={styles.searchButton}
-            onPress={handleSearchMatches}
-          >
-            <ThemedText style={styles.searchButtonText}>Search Matches</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-      </ScrollView>
-
+        }
+        contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
+      />
       {/* Bottom Navigation Bar (similar to Home/Find Matches) */}
       <ThemedView style={styles.bottomTabBar}>
         <TouchableOpacity
@@ -200,7 +222,6 @@ const FindMatches = () => {
           }}
         >
           <Ionicons name="chatbubble-outline" size={24} color={router.pathname === '/messages' ? "#007AFF" : "#007AFF"} />
-          {/* TODO: Add notification badge logic here (similar to messages.jsx if applicable) */}
         </TouchableOpacity>
       </ThemedView>
     </ThemedView>
@@ -213,9 +234,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
   header: {
     padding: 20,
     borderBottomWidth: 1,
@@ -225,9 +243,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
-  form: {
-    padding: 20,
-  },
   section: {
     marginBottom: 20,
   },
@@ -236,42 +251,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  locationContainer: {
-    position: 'relative',
-  },
-  searchContainer: {
-    flex: 0,
-  },
-  searchInput: { 
-    height: 50,
+  locationInput: {
     backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    fontSize: 14,
-  },
-  searchResults: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginTop: 5,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    maxHeight: 200,
-    position: 'absolute',
-    top: 50,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-  },
-  searchRow: {
     padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  searchDescription: {
-    fontSize: 14,
+    borderRadius: 10,
+    alignItems: 'center',
   },
   skillLevelContainer: {
     flexDirection: 'row',
